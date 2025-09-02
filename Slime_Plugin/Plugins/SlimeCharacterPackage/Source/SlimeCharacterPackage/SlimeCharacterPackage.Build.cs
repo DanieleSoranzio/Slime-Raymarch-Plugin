@@ -38,6 +38,7 @@ public class SlimeCharacterPackage : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+				"EnhancedInput", "EnhancedInput",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
