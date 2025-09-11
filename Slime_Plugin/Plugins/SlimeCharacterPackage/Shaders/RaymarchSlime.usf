@@ -1,0 +1,123 @@
+//Container of the Raymarch (Flickering/Fix rotation/Add jump/ Fix Texture/Add Trail/Add Secondary spheres/) 
+struct RaymarchStruct
+{
+    float3 SphereCenters[10];
+    float SphereRadii[10];
+    Texture2D Tex;
+    SamplerState TexSampler;
+    //====================================================
+    // Signed Distance Functions (SDF)
+    //====================================================
+    float sdBox(float3 center, float3 halfSize, float roundness)
+    {
+        float3 q = abs(center) - halfSize;
+        return length(max(q, 0.0)) - roundness;
+    }
+
+    float sdSphere(float3 p, float3 center, float r)
+    {
+        return length(p - center) - r;
+    }
+
+    float smin(float a, float b, float k)
+    {
+        float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
+        return lerp(b, a, h) - k * h * (1.0 - h);
+    }
+
+    //====================================================
+    // Map con array di sfere
+    //====================================================
+
+    float map(float3 p,float3 BoxCenter,float3 BoxSize,float BoxRoundness,float3 SphereCenters[10],float SphereRadii[10],int SphereCount,float Smoothness)
+    {
+        float d = sdBox(p-BoxCenter, BoxSize*0.5, BoxRoundness);
+    
+        for (int i = 0; i < SphereCount; i++) {
+            float di = sdSphere(p, SphereCenters[i], SphereRadii[i]);
+            d = smin(d, di, Smoothness);
+        }
+
+        return d;
+    }
+
+    //====================================================
+    // Normal
+    //====================================================
+
+    float3 getNormal(float3 p,float3 Boxcenter,float3 BoxSize,float BoxRoundness,int SphereCount,float Smoothness)
+    {
+        float h = 0.0005;
+        float3 k1 = float3( 1, -1, -1);
+        float3 k2 = float3(-1, -1,  1);
+        float3 k3 = float3(-1,  1, -1);
+        float3 k4 = float3( 1,  1,  1);
+
+        return normalize(
+            k1 * map(p + k1 * h, Boxcenter,BoxSize,BoxRoundness ,SphereCenters, SphereRadii, SphereCount, Smoothness) +
+            k2 * map(p + k2 * h, Boxcenter,BoxSize,BoxRoundness ,SphereCenters, SphereRadii, SphereCount, Smoothness) +
+            k3 * map(p + k3 * h, Boxcenter,BoxSize,BoxRoundness ,SphereCenters, SphereRadii, SphereCount, Smoothness) +
+            k4 * map(p + k4 * h, Boxcenter,BoxSize,BoxRoundness ,SphereCenters, SphereRadii, SphereCount, Smoothness)
+        );
+    }
+
+    //====================================================
+    // Triplanar Texture will apply the given texture to the object no matter the shape of it (da fixare) 
+    //====================================================
+
+    float3 SampleTriplanar(Texture2D Tex, SamplerState Sampler, float3 p, float3 normal, float scale)
+    {
+        float3 blend = abs(normal);
+        blend = pow(blend, 4.0);
+        blend /= (blend.x + blend.y + blend.z);
+
+        float2 uvX = p.yz * scale;
+        float2 uvY = p.zx * scale;
+        float2 uvZ = p.xy * scale;
+
+        float3 colX = Tex.Sample(Sampler, uvX).rgb;
+        float3 colY = Tex.Sample(Sampler, uvY).rgb;
+        float3 colZ = Tex.Sample(Sampler, uvZ).rgb;
+
+        return colX * blend.x + colY * blend.y + colZ * blend.z;
+    }
+
+    //====================================================
+    // Compile Function 
+    //====================================================
+
+    float4 RaymarchExecute(float3 CameraPos,float3 WorldPos,float3 BoxCenter,float3 BoxSize,float BoxRoundness,int SphereCount,float Smoothness,int MaxSteps,float MaxDistance,float HitThreshold,float TexScale)
+    {
+        float3 ro = CameraPos;
+        float3 rd = normalize(WorldPos - CameraPos);
+
+        float t = 0.0;
+        float3 p;
+        bool hit = false;
+
+        [loop]
+        for (int i = 0; i < MaxSteps; i++) {
+            p = ro + rd * t;
+            float dist = map(p,BoxCenter,BoxSize,BoxRoundness ,SphereCenters, SphereRadii, SphereCount, Smoothness);
+
+            if (dist < HitThreshold) {
+                hit = true;
+                break;
+            }
+            if (t > MaxDistance) break;
+
+            t += dist;
+        }
+
+        if (hit) {
+            float3 normal = getNormal(p,BoxCenter,BoxSize,BoxRoundness,SphereCount, Smoothness);
+            float3 texColor = SampleTriplanar(Tex,TexSampler, p, normal, TexScale);
+            return float4(texColor, 1.0);
+        }
+
+        return float4(0, 0, 0, 0);
+    }
+};
+
+
+
