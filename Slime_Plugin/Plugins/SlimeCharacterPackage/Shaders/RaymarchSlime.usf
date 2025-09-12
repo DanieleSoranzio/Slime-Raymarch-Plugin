@@ -4,9 +4,10 @@ struct RaymarchStruct
     float3 ActorPosition;
     float3 SphereCenters[10];
     float SphereRadii[10];
-    int intSphereCount;
+    int SphereCount;
     Texture2D Tex;
     SamplerState TexSampler;
+    
     //====================================================
     // Signed Distance Functions (SDF)
     //====================================================
@@ -35,7 +36,7 @@ struct RaymarchStruct
     {
         float d = sdBox(p-BoxCenter, BoxSize*0.5, BoxRoundness);
     
-        for (int i = 0; i < intSphereCount; i++) {
+        for (int i = 0; i < SphereCount; i++) {
             float di = sdSphere(p, SphereCenters[i], SphereRadii[i]);
             d = smin(d, di, Smoothness);
         }
@@ -91,21 +92,19 @@ struct RaymarchStruct
     // Compile Function 
     //====================================================
 
-    float4 RaymarchExecute(float3 CameraPos,float3 WorldPos,float3 BoxCenter,float3 BoxSize,float BoxRoundness,int SphereCount,float Smoothness,int MaxSteps,float MaxDistance,float HitThreshold,float TexScale)
+    float4 RaymarchExecute(float3 CameraPos,float3 WorldPos,float3 BoxCenter,float3 BoxSize,float BoxRoundness,float Smoothness,int MaxSteps,float MaxDistance,float HitThreshold,float TexScale)
     {
         float3 ro = CameraPos;
         float3 rd = normalize(WorldPos - CameraPos);
-        //ActorRotationMatrix = (float3x3(ActorForwardRotation,ActorRightRotation,ActorUpRotation));
-        intSphereCount = SphereCount;
         float t = 0.0;
         float3 p;
         bool hit = false;
         float3 localPos;
         [loop]
-        for (int i = 0; i < MaxSteps; i++) {
+        for (int i = 0; i < MaxSteps; i++) 
+        {
             p = ro + rd * t;
             localPos=p-ActorPosition;
-            //localPos =mul((p-ActorPosition),transpose(ActorRotationMatrix));
             float dist = map(localPos,BoxCenter,BoxSize,BoxRoundness,Smoothness);
 
             if (dist < HitThreshold) {
@@ -117,7 +116,8 @@ struct RaymarchStruct
             t += dist;
         }
 
-        if (hit) {
+        if (hit)
+        {
             float3 normal = getNormal(localPos, BoxCenter, BoxSize, BoxRoundness, Smoothness);
             float3 texColor = SampleTriplanar(Tex,TexSampler, localPos, normal, TexScale);
             return float4(texColor, 1.0);

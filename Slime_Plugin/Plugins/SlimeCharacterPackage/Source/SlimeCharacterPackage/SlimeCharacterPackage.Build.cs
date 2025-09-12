@@ -25,7 +25,7 @@ public class SlimeCharacterPackage : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core", "Engine","RenderCore", "RHI","EnhancedInput","InputCore"
+				"Core", "Engine","RenderCore", "RHI","EnhancedInput","InputCore",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -40,6 +40,7 @@ public class SlimeCharacterPackage : ModuleRules
 				"SlateCore",
 				"UnrealEd",
 				"MaterialEditor",
+				"EnhancedInput",
 				
 				// ... add private dependencies that you statically link with here ...	
 			}
