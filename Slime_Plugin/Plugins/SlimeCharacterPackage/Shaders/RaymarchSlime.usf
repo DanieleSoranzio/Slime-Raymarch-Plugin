@@ -1,8 +1,10 @@
-//Container of the Raymarch (Flickering/Fix rotation/Add jump/ Fix Texture/Add Trail/Add Secondary spheres/) 
+//Container of the Raymarch (Flickering/Fix rotation/Add jump/Add Trail/Add Secondary spheres/) 
 struct RaymarchStruct
 {
+    float3 ActorPosition;
     float3 SphereCenters[10];
     float SphereRadii[10];
+    int intSphereCount;
     Texture2D Tex;
     SamplerState TexSampler;
     //====================================================
@@ -29,36 +31,34 @@ struct RaymarchStruct
     // Map con array di sfere
     //====================================================
 
-    float map(float3 p,float3 BoxCenter,float3 BoxSize,float BoxRoundness,float3 SphereCenters[10],float SphereRadii[10],int SphereCount,float Smoothness)
+    float map(float3 p,float3 BoxCenter,float3 BoxSize,float BoxRoundness,float Smoothness)
     {
         float d = sdBox(p-BoxCenter, BoxSize*0.5, BoxRoundness);
     
-        for (int i = 0; i < SphereCount; i++) {
+        for (int i = 0; i < intSphereCount; i++) {
             float di = sdSphere(p, SphereCenters[i], SphereRadii[i]);
             d = smin(d, di, Smoothness);
         }
 
         return d;
     }
-
+    
     //====================================================
     // Normal
     //====================================================
 
-    float3 getNormal(float3 p,float3 Boxcenter,float3 BoxSize,float BoxRoundness,int SphereCount,float Smoothness)
+    float3 getNormal(float3 p, float3 BoxCenter, float3 BoxSize, float BoxRoundness, float Smoothness)
     {
-        float h = 0.0005;
-        float3 k1 = float3( 1, -1, -1);
-        float3 k2 = float3(-1, -1,  1);
-        float3 k3 = float3(-1,  1, -1);
-        float3 k4 = float3( 1,  1,  1);
+        float eps = 0.0005;
+        float3 dx = float3(eps, 0.0, 0.0);
+        float3 dy = float3(0.0, eps, 0.0);
+        float3 dz = float3(0.0, 0.0, eps);
 
-        return normalize(
-            k1 * map(p + k1 * h, Boxcenter,BoxSize,BoxRoundness ,SphereCenters, SphereRadii, SphereCount, Smoothness) +
-            k2 * map(p + k2 * h, Boxcenter,BoxSize,BoxRoundness ,SphereCenters, SphereRadii, SphereCount, Smoothness) +
-            k3 * map(p + k3 * h, Boxcenter,BoxSize,BoxRoundness ,SphereCenters, SphereRadii, SphereCount, Smoothness) +
-            k4 * map(p + k4 * h, Boxcenter,BoxSize,BoxRoundness ,SphereCenters, SphereRadii, SphereCount, Smoothness)
-        );
+        float nx = map(p + dx, BoxCenter, BoxSize, BoxRoundness, Smoothness) - map(p - dx, BoxCenter, BoxSize, BoxRoundness, Smoothness);
+        float ny = map(p + dy, BoxCenter, BoxSize, BoxRoundness, Smoothness) - map(p - dy, BoxCenter, BoxSize, BoxRoundness, Smoothness);
+        float nz = map(p + dz, BoxCenter, BoxSize, BoxRoundness, Smoothness) - map(p - dz, BoxCenter, BoxSize, BoxRoundness, Smoothness);
+
+        return normalize(float3(nx, ny, nz));
     }
 
     //====================================================
@@ -67,6 +67,7 @@ struct RaymarchStruct
 
     float3 SampleTriplanar(Texture2D Tex, SamplerState Sampler, float3 p, float3 normal, float scale)
     {
+        
         float3 blend = abs(normal);
         blend = pow(blend, 4.0);
         blend /= (blend.x + blend.y + blend.z);
@@ -74,6 +75,10 @@ struct RaymarchStruct
         float2 uvX = p.yz * scale;
         float2 uvY = p.zx * scale;
         float2 uvZ = p.xy * scale;
+
+        uvX = frac(uvX);
+        uvY = frac(uvY);
+        uvZ = frac(uvZ);
 
         float3 colX = Tex.Sample(Sampler, uvX).rgb;
         float3 colY = Tex.Sample(Sampler, uvY).rgb;
@@ -90,15 +95,18 @@ struct RaymarchStruct
     {
         float3 ro = CameraPos;
         float3 rd = normalize(WorldPos - CameraPos);
-
+        //ActorRotationMatrix = (float3x3(ActorForwardRotation,ActorRightRotation,ActorUpRotation));
+        intSphereCount = SphereCount;
         float t = 0.0;
         float3 p;
         bool hit = false;
-
+        float3 localPos;
         [loop]
         for (int i = 0; i < MaxSteps; i++) {
             p = ro + rd * t;
-            float dist = map(p,BoxCenter,BoxSize,BoxRoundness ,SphereCenters, SphereRadii, SphereCount, Smoothness);
+            localPos=p-ActorPosition;
+            //localPos =mul((p-ActorPosition),transpose(ActorRotationMatrix));
+            float dist = map(localPos,BoxCenter,BoxSize,BoxRoundness,Smoothness);
 
             if (dist < HitThreshold) {
                 hit = true;
@@ -110,8 +118,8 @@ struct RaymarchStruct
         }
 
         if (hit) {
-            float3 normal = getNormal(p,BoxCenter,BoxSize,BoxRoundness,SphereCount, Smoothness);
-            float3 texColor = SampleTriplanar(Tex,TexSampler, p, normal, TexScale);
+            float3 normal = getNormal(localPos, BoxCenter, BoxSize, BoxRoundness, Smoothness);
+            float3 texColor = SampleTriplanar(Tex,TexSampler, localPos, normal, TexScale);
             return float4(texColor, 1.0);
         }
 
