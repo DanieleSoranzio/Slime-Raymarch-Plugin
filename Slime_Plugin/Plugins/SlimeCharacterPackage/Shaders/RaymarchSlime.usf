@@ -1,12 +1,32 @@
-//Container of the Raymarch (Flickering/Fix rotation/Add jump/Add Trail/Add Secondary spheres/) 
+//Container of the Raymarch (Add jump/Add Trail/Add Secondary spheres) 
 struct RaymarchStruct
 {
+    //Actor Variables
     float3 ActorPosition;
+    float3 ActorRotationForward;
+    float3 ActorRotationRight;
+    float3 ActorRotationUp;
+    float3x3 ActorRotationMatrix;
+    
+    //Sdf Variables
     float3 SphereCenters[10];
+    float3 ExternalSpheresCenters[10];
+    float ExternalSpheresRadii[10];
+    int ExternalSpheresCount;
+    float ExternalRotationSpeed;
     float SphereRadii[10];
     int SphereCount;
+    
+    //Texture Variables
     Texture2D Tex;
     SamplerState TexSampler;
+    
+    //Noise Variables
+    float IsNoise;
+    float noiseIndex;
+    float noiseScale;
+    float iTime;
+    
     
     //====================================================
     // Signed Distance Functions (SDF)
@@ -27,30 +47,50 @@ struct RaymarchStruct
         float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
         return lerp(b, a, h) - k * h * (1.0 - h);
     }
-
+    
     //====================================================
-    // Map con array di sfere
+    // Map will create SDFs and return the pixels modified 
     //====================================================
-
     float map(float3 p,float3 BoxCenter,float3 BoxSize,float BoxRoundness,float Smoothness)
     {
-        float d = sdBox(p-BoxCenter, BoxSize*0.5, BoxRoundness);
-    
-        for (int i = 0; i < SphereCount; i++) {
+        
+        float d = sdSphere(p, SphereCenters[0], SphereRadii[0]);
+        for (int i = 1; i < SphereCount; i++) {
             float di = sdSphere(p, SphereCenters[i], SphereRadii[i]);
             d = smin(d, di, Smoothness);
         }
-
+        
+       
+        //Add every sdf that need to have noise on it right here
+        
+        if (IsNoise>0)
+        {
+            float noise = sin(noiseScale * p.x + iTime) * sin(noiseScale * p.z + iTime) * sin(noiseScale * p.y + iTime) * noiseIndex;
+            d += noise;
+        }
+        
+        //Add every sdf that doesn't need noise on it right here
+        
+        for (int i = 0; i < ExternalSpheresCount; i++) {
+            float Xsymbol= sign(ExternalSpheresCenters[i].x);
+            float Zsymbol= sign(ExternalSpheresCenters[i].z);
+            float3 currentCenter = float3(cos(iTime*(ExternalRotationSpeed*Xsymbol))*ExternalSpheresCenters[i].x,sin(iTime*(ExternalRotationSpeed*Zsymbol))*ExternalSpheresCenters[i].z,ExternalSpheresCenters[i].y);
+            float di = sdSphere(p, currentCenter, ExternalSpheresRadii[i]);
+            d = smin(d, di, Smoothness);
+        }
+        float d1= sdBox(p-BoxCenter, BoxSize*0.5, BoxRoundness);
+        d=smin(d, d1, Smoothness);
+       
         return d;
     }
     
     //====================================================
-    // Normal
+    // getNormal will obtain and return the normal of the SDFs
     //====================================================
 
     float3 getNormal(float3 p, float3 BoxCenter, float3 BoxSize, float BoxRoundness, float Smoothness)
     {
-        float eps = 0.0005;
+        float eps = 0.001;
         float3 dx = float3(eps, 0.0, 0.0);
         float3 dy = float3(0.0, eps, 0.0);
         float3 dz = float3(0.0, 0.0, eps);
@@ -63,7 +103,7 @@ struct RaymarchStruct
     }
 
     //====================================================
-    // Triplanar Texture will apply the given texture to the object no matter the shape of it (da fixare) 
+    // Triplanar Texture will apply the given texture to the object no matter the shape of it
     //====================================================
 
     float3 SampleTriplanar(Texture2D Tex, SamplerState Sampler, float3 p, float3 normal, float scale)
@@ -89,22 +129,32 @@ struct RaymarchStruct
     }
 
     //====================================================
-    // Compile Function 
+    // Compile Main Function 
     //====================================================
 
-    float4 RaymarchExecute(float3 CameraPos,float3 WorldPos,float3 BoxCenter,float3 BoxSize,float BoxRoundness,float Smoothness,int MaxSteps,float MaxDistance,float HitThreshold,float TexScale)
+    float4 RaymarchExecute(float3 CameraPos,float3 WorldPos,float3 ObjectWorldPos,float3 BoxCenter,float3 BoxSize,float BoxRoundness,float Smoothness,int MaxSteps,float MaxDistance,float HitThreshold,float TexScale)
     {
+        //Setting up Actor variables
+        ActorRotationForward=normalize(ActorRotationForward);
+        ActorRotationRight=normalize(ActorRotationRight);
+        ActorRotationUp=normalize(ActorRotationUp);
+        ActorRotationMatrix = float3x3(ActorRotationForward,ActorRotationRight,ActorRotationUp);
+
+        //Setting up Raymarch Variables
         float3 ro = CameraPos;
         float3 rd = normalize(WorldPos - CameraPos);
         float t = 0.0;
         float3 p;
         bool hit = false;
         float3 localPos;
+
+        //Raymarch loop starts here
         [loop]
         for (int i = 0; i < MaxSteps; i++) 
         {
             p = ro + rd * t;
-            localPos=p-ActorPosition;
+            localPos = p-ObjectWorldPos;
+            localPos=mul(ActorRotationMatrix,localPos);
             float dist = map(localPos,BoxCenter,BoxSize,BoxRoundness,Smoothness);
 
             if (dist < HitThreshold) {
@@ -115,14 +165,14 @@ struct RaymarchStruct
 
             t += dist;
         }
-
+        //If the ray hits than return the color/texture on the pixel
         if (hit)
         {
             float3 normal = getNormal(localPos, BoxCenter, BoxSize, BoxRoundness, Smoothness);
             float3 texColor = SampleTriplanar(Tex,TexSampler, localPos, normal, TexScale);
             return float4(texColor, 1.0);
         }
-
+        //If the ray doesn't hit return an invisible pixel
         return float4(0, 0, 0, 0);
     }
 };
