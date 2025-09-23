@@ -18,8 +18,10 @@ struct RaymarchStruct
     int SphereCount;
     
     //Texture Variables
+    float UseTexture;
     Texture2D Tex;
     SamplerState TexSampler;
+    float3 BaseColor;
     
     //Noise Variables
     float IsNoise;
@@ -53,15 +55,17 @@ struct RaymarchStruct
     //====================================================
     float map(float3 p,float3 BoxCenter,float3 BoxSize,float BoxRoundness,float Smoothness)
     {
+        //Add every sdf that need to have noise on it right here
         
         float d = sdSphere(p, SphereCenters[0], SphereRadii[0]);
         for (int i = 1; i < SphereCount; i++) {
             float di = sdSphere(p, SphereCenters[i], SphereRadii[i]);
             d = smin(d, di, Smoothness);
         }
-        
+        float d1= sdBox(p-BoxCenter, BoxSize*0.5, BoxRoundness);
+        d=smin(d, d1, Smoothness);
        
-        //Add every sdf that need to have noise on it right here
+        
         
         if (IsNoise>0)
         {
@@ -78,8 +82,7 @@ struct RaymarchStruct
             float di = sdSphere(p, currentCenter, ExternalSpheresRadii[i]);
             d = smin(d, di, Smoothness);
         }
-        float d1= sdBox(p-BoxCenter, BoxSize*0.5, BoxRoundness);
-        d=smin(d, d1, Smoothness);
+
        
         return d;
     }
@@ -168,9 +171,17 @@ struct RaymarchStruct
         //If the ray hits than return the color/texture on the pixel
         if (hit)
         {
-            float3 normal = getNormal(localPos, BoxCenter, BoxSize, BoxRoundness, Smoothness);
-            float3 texColor = SampleTriplanar(Tex,TexSampler, localPos, normal, TexScale);
-            return float4(texColor, 1.0);
+            //Only if you want to use a texture, use color otherwise
+            if (UseTexture>0.f)
+            {
+                float3 normal = getNormal(localPos, BoxCenter, BoxSize, BoxRoundness, Smoothness);
+                float3 texColor = SampleTriplanar(Tex,TexSampler, localPos, normal, TexScale);
+                return float4(texColor, 1.0);
+            }
+            else
+            {
+                return float4(BaseColor, 1.0);
+            }
         }
         //If the ray doesn't hit return an invisible pixel
         return float4(0, 0, 0, 0);
