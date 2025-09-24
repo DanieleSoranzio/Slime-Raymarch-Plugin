@@ -16,85 +16,92 @@ public:
 	// Sets default values for this component's properties
 	UCustomSlimeComponent();
 
+	UPROPERTY(EditAnywhere, Category="Slime|Actor")
+	bool castShadows=false;
+	UPROPERTY(EditAnywhere,Category="Slime|Actor")
+	FVector meshSize;
+	
 	//=================================
 	//Spheres
 	//=================================
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|Spheres",meta=(UIMin="0.0",UIMax="4.0",ClampMin="0.0",ClampMax="4.0"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|Spheres",meta=(UIMin="0.0",UIMax="5.0",ClampMin="0.0",ClampMax="5.0"))
 	int32 NumSpheres;
 
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=0",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=1",EditConditionHides))
 	FVector SphereCenter1;
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=0",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=1",EditConditionHides))
 	float SphereRadius1;
 
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=1",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=2",EditConditionHides))
 	FVector SphereCenter2;
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=1",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=2",EditConditionHides))
 	float SphereRadius2;
 	
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=2",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=3",EditConditionHides))
 	FVector SphereCenter3;
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=2",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=3",EditConditionHides))
 	float SphereRadius3;
 	
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=3",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=4",EditConditionHides))
 	FVector SphereCenter4;
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=3",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=4",EditConditionHides))
 	float SphereRadius4;
 	
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=4",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=5",EditConditionHides))
 	FVector SphereCenter5;
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=4",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|Spheres", meta=(EditCondition="NumSpheres>=5",EditConditionHides))
 	float SphereRadius5;
 
 	//=================================
 	//External Spheres
 	//=================================
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres",meta=(UIMin="0.0",UIMax="5.0",ClampMin="0.0",ClampMax="5.0"))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|External Spheres",meta=(UIMin="0.0",UIMax="5.0",ClampMin="0.0",ClampMax="5.0"))
 	int32 ExternalNumSpheres;
 	
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=1",EditConditionHides))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=1",EditConditionHides))
 	FVector ExternalSphereCenter1;
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=1",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=1",EditConditionHides))
 	float ExternalSphereRadius1;
 	
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=2",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=2",EditConditionHides))
 	FVector ExternalSphereCenter2;
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=2",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=2",EditConditionHides))
 	float ExternalSphereRadius2;
 
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=3",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=3",EditConditionHides))
 	FVector ExternalSphereCenter3;
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=3",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=3",EditConditionHides))
 	float ExternalSphereRadius3;
 
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=4",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=4",EditConditionHides))
 	FVector ExternalSphereCenter4;
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=4",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=4",EditConditionHides))
 	float ExternalSphereRadius4;
 
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=5",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=5",EditConditionHides))
 	FVector ExternalSphereCenter5;
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=5",EditConditionHides))
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=5",EditConditionHides))
 	float ExternalSphereRadius5;
 	
-	UPROPERTY(EditAnywhere, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=1",EditConditionHides))  
+	UPROPERTY(EditAnywhere,BlueprintReadWrite, Category="Slime|SDF|External Spheres", meta=(EditCondition="ExternalNumSpheres>=1",EditConditionHides))  
 	float ExternalRotationSpeed;                                                                                                      
 
 	//=================================
 	//Base Box
 	//=================================
-	UPROPERTY(EditAnywhere,Category="Slime|SDF|Base Box")
+	UPROPERTY(EditAnywhere,Category="Slime|SDF|Base Box")     
+	bool isBox=true;   
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Slime|SDF|Base Box",meta=(EditCondition="isBox",EditConditionHides))
 	FVector BoxCenter;
-	UPROPERTY(EditAnywhere,Category="Slime|SDF|Base Box")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Slime|SDF|Base Box",meta=(EditCondition="isBox",EditConditionHides))
 	FVector BoxSize;
-	UPROPERTY(EditAnywhere,Category="Slime|SDF|Base Box")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Slime|SDF|Base Box",meta=(EditCondition="isBox",EditConditionHides))
 	float BoxRoundness=8.0f;
 
 	//=================================     
 	//Raymarch                             
 	//=================================     
-	UPROPERTY(EditAnywhere,Category="Slime|Raymarch")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Slime|Raymarch")
 	float Smoothness=50.0f;
 	UPROPERTY(EditAnywhere,Category="Slime|Raymarch")
 	int32 MaxSteps=256;
@@ -108,14 +115,21 @@ public:
 	//=================================     
 	//Texture                              
 	//=================================
-	UPROPERTY(EditAnywhere,Category="Slime|Texture",meta=(EditCondition="!useTexture"))  
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Slime|Texture",meta=(EditCondition="!useTexture"))  
 	FLinearColor BaseColor;                                                               
-	UPROPERTY(EditAnywhere,Category="Slime|Texture")
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Slime|Texture")
 	bool useTexture=false;
 	UPROPERTY(EditAnywhere,Category="Slime|Texture",meta=(EditCondition="useTexture"))
 	UTexture2D* TextureObject;
 	UPROPERTY(EditAnywhere,Category="Slime|Texture",meta=(EditCondition="useTexture"))  
 	float TextureScale=0.01f;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="Slime|Texture",meta=(EditCondition="useTexture"))
+	bool IsSnow=false;
+	UPROPERTY(EditAnywhere,Category="Slime|Texture",meta=(EditCondition="useTexture&&IsSnow"))
+	UTexture2D* SnowTexture;
+	UPROPERTY(EditAnywhere,Category="Slime|Texture",meta=(EditCondition="useTexture&&IsSnow"))  
+	float SnowIndex=0.1f;
+	
 
 
 
@@ -147,7 +161,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category="Slime|Mesh")
 	UMaterialInstanceDynamic* CreateMesh();
 	UFUNCTION(BlueprintCallable, Category="Slime|Mesh")     
-	void UpdateRotation();                  
+	void UpdateRotation();
+	
+	UFUNCTION(BlueprintCallable, Category="Slime|Mesh")     
+	void UpdateExternalRotation();
+
+	UFUNCTION(BlueprintCallable, Category="Slime|Mesh")     
+	void UpdateMaterialParameters();
+	
 
 	//=================================  
 	//CallableFunctions                  

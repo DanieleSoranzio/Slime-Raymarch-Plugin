@@ -16,12 +16,18 @@ struct RaymarchStruct
     float ExternalRotationSpeed;
     float SphereRadii[10];
     int SphereCount;
+    float IsBox;
     
     //Texture Variables
     float UseTexture;
     Texture2D Tex;
     SamplerState TexSampler;
     float3 BaseColor;
+    float IsSnow;
+    Texture2D TexSnow;
+    SamplerState TexSnowSampler;
+    float snowIndex;
+    
     
     //Noise Variables
     float IsNoise;
@@ -57,15 +63,17 @@ struct RaymarchStruct
     {
         //Add every sdf that need to have noise on it right here
         
-        float d = sdSphere(p, SphereCenters[0], SphereRadii[0]);
-        for (int i = 1; i < SphereCount; i++) {
+        float d=999999.0f;
+        for (int i = 0; i < SphereCount; i++) {
             float di = sdSphere(p, SphereCenters[i], SphereRadii[i]);
             d = smin(d, di, Smoothness);
         }
-        float d1= sdBox(p-BoxCenter, BoxSize*0.5, BoxRoundness);
-        d=smin(d, d1, Smoothness);
-       
         
+        if (IsBox>0)
+        {
+            float d1= sdBox(p-BoxCenter, BoxSize*0.5, BoxRoundness);
+            d=smin(d, d1, Smoothness);
+        }
         
         if (IsNoise>0)
         {
@@ -93,7 +101,7 @@ struct RaymarchStruct
 
     float3 getNormal(float3 p, float3 BoxCenter, float3 BoxSize, float BoxRoundness, float Smoothness)
     {
-        float eps = 0.001;
+        float eps = 0.0001;
         float3 dx = float3(eps, 0.0, 0.0);
         float3 dy = float3(0.0, eps, 0.0);
         float3 dz = float3(0.0, 0.0, eps);
@@ -129,6 +137,37 @@ struct RaymarchStruct
         float3 colZ = Tex.Sample(Sampler, uvZ).rgb;
 
         return colX * blend.x + colY * blend.y + colZ * blend.z;
+    }
+
+    //====================================================
+    // Triplanar Texture will apply the given texture to the object no matter the shape of it
+    //====================================================
+
+    float3 ApplySnow(Texture2D SnowTex, SamplerState SnowSampler, float3 localPos, float3 normal, float scale, float3 baseColor)
+    {
+        
+        float upMask = saturate(normal.z);
+        float snowFactor = pow(upMask, snowIndex);
+        
+        float2 uvX = localPos.yz * scale;
+        float2 uvY = localPos.zx * scale;
+        float2 uvZ = localPos.xy * scale;
+
+        uvX = frac(uvX);
+        uvY = frac(uvY);
+        uvZ = frac(uvZ);
+
+        float3 colX = SnowTex.Sample(SnowSampler, uvX).rgb;
+        float3 colY = SnowTex.Sample(SnowSampler, uvY).rgb;
+        float3 colZ = SnowTex.Sample(SnowSampler, uvZ).rgb;
+
+        float3 blend = abs(normal);
+        blend = pow(blend, 4.0);
+        blend /= (blend.x + blend.y + blend.z);
+
+        float3 snowTexColor = colX * blend.x + colY * blend.y + colZ * blend.z;
+        
+        return lerp(baseColor, snowTexColor, snowFactor);
     }
 
     //====================================================
@@ -176,6 +215,10 @@ struct RaymarchStruct
             {
                 float3 normal = getNormal(localPos, BoxCenter, BoxSize, BoxRoundness, Smoothness);
                 float3 texColor = SampleTriplanar(Tex,TexSampler, localPos, normal, TexScale);
+                if (IsSnow>0)
+                {
+                    texColor = ApplySnow(TexSnow, TexSnowSampler, localPos, normal, TexScale, texColor);
+                }
                 return float4(texColor, 1.0);
             }
             else

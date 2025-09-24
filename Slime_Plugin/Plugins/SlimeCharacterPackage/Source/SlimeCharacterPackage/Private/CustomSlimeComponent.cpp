@@ -23,12 +23,13 @@ UMaterialInstanceDynamic* UCustomSlimeComponent::CreateMesh()
 	
 	UStaticMeshComponent* MeshComp = Cast<UStaticMeshComponent>(GetOwner()->AddComponentByClass(UStaticMeshComponent::StaticClass(), false, FTransform::Identity, false));
 	if (!MeshComp) return nullptr;
-	MeshComp->SetCastShadow(false);
-	MeshComp->SetRelativeScale3D(FVector(2.5f));
+	MeshComp->SetCastShadow(castShadows);
+	meshSize+=FVector(0.2f);
+	MeshComp->SetRelativeScale3D(meshSize);
 	MeshComp->SetStaticMesh(Mesh);
 	MeshComp->SetMaterial(0, SlimeMaterial);
 	MeshComp->SetCollisionProfileName("NoCollision");
-	MeshComp->SetRelativeLocation(FVector(0, 0, -20.0f));
+	MeshComp->SetRelativeLocation(FVector(0, 0, 0.0f));
 	DynMat = UMaterialInstanceDynamic::Create(SlimeMaterial,this);
 	MeshComp->SetMaterial(0, DynMat);
 	DynMat->SetScalarParameterValue(TEXT("SphereCount"), NumSpheres);
@@ -38,6 +39,7 @@ UMaterialInstanceDynamic* UCustomSlimeComponent::CreateMesh()
 	DynMat->SetVectorParameterValue(TEXT("ActorUpRot"), ActorRotationUp);
 	DynMat->SetVectorParameterValue(TEXT("ActorRightRot"), ActorRotationRight);
 	DynMat->SetVectorParameterValue(TEXT("ActorForwardRot"), ActorRotationForward);
+	DynMat->SetScalarParameterValue(TEXT("IsBox"), (isBox)? 1.0f : 0.0f);
 	DynMat->SetVectorParameterValue(TEXT("BoxCenter"), BoxCenter);
 	DynMat->SetVectorParameterValue(TEXT("BoxSize"), BoxSize);
 	DynMat->SetScalarParameterValue(TEXT("BoxRoundness"), BoxRoundness);
@@ -58,6 +60,9 @@ UMaterialInstanceDynamic* UCustomSlimeComponent::CreateMesh()
 	DynMat->SetScalarParameterValue(TEXT("HitThreshold"), HitThreshold);
 	DynMat->SetTextureParameterValue(TEXT("Tex"),TextureObject);
 	DynMat->SetScalarParameterValue(TEXT("TextureScale"), TextureScale);
+	DynMat->SetScalarParameterValue(TEXT("IsSnow"), IsSnow? 1.0f : 0.0f);
+	DynMat->SetTextureParameterValue(TEXT("SnowTexture"),SnowTexture);
+	DynMat->SetScalarParameterValue(TEXT("SnowIndex"), SnowIndex);
 	DynMat->SetScalarParameterValue(TEXT("IsNoise"), IsNoise? 1.0f : 0.0f);
 	DynMat->SetScalarParameterValue(TEXT("NoiseScale"), noiseScale);
 	DynMat->SetScalarParameterValue(TEXT("NoiseIndex"), noiseIndex);
@@ -90,6 +95,56 @@ void UCustomSlimeComponent::UpdateRotation()
 	DynMat->SetVectorParameterValue(TEXT("ActorUpRot"), ActorRotationUp);
 	DynMat->SetVectorParameterValue(TEXT("ActorRightRot"), ActorRotationRight);
 	DynMat->SetVectorParameterValue(TEXT("ActorForwardRot"), ActorRotationForward);
+}
+
+void UCustomSlimeComponent::UpdateExternalRotation()
+{
+	DynMat->SetScalarParameterValue(TEXT("ExternalRotationSpeed"),ExternalRotationSpeed);
+}
+
+void UCustomSlimeComponent::UpdateMaterialParameters()
+{
+	DynMat->SetScalarParameterValue(TEXT("IsBox"), (isBox)? 1.0f : 0.0f);
+	DynMat->SetVectorParameterValue(TEXT("BoxCenter"), BoxCenter);
+	DynMat->SetVectorParameterValue(TEXT("BoxSize"), BoxSize);
+	DynMat->SetScalarParameterValue(TEXT("BoxRoundness"), BoxRoundness);
+	DynMat->SetVectorParameterValue(TEXT("SphereCenter1"), SphereCenter1);
+	DynMat->SetVectorParameterValue(TEXT("SphereCenter2"), SphereCenter2);
+	DynMat->SetVectorParameterValue(TEXT("SphereCenter3"), SphereCenter3);
+	DynMat->SetVectorParameterValue(TEXT("SphereCenter4"), SphereCenter4);
+	DynMat->SetVectorParameterValue(TEXT("SphereCenter5"), SphereCenter5);
+	DynMat->SetScalarParameterValue(TEXT("SphereRadius1"), SphereRadius1);
+	DynMat->SetScalarParameterValue(TEXT("SphereRadius2"), SphereRadius2);
+	DynMat->SetScalarParameterValue(TEXT("SphereRadius3"), SphereRadius3);
+	DynMat->SetScalarParameterValue(TEXT("SphereRadius4"), SphereRadius4);
+	DynMat->SetScalarParameterValue(TEXT("SphereRadius5"), SphereRadius5);
+	DynMat->SetScalarParameterValue(TEXT("SphereCount"), NumSpheres);
+	DynMat->SetScalarParameterValue(TEXT("Smoothness"), Smoothness);
+	DynMat->SetScalarParameterValue(TEXT("MaxSteps"), MaxSteps);
+	DynMat->SetScalarParameterValue(TEXT("MaxDistance"), MaxDistance);
+	DynMat->SetScalarParameterValue(TEXT("HitThreshold"), HitThreshold);
+	DynMat->SetTextureParameterValue(TEXT("Tex"),TextureObject);
+	DynMat->SetScalarParameterValue(TEXT("TextureScale"), TextureScale);
+	DynMat->SetScalarParameterValue(TEXT("IsSnow"), IsSnow? 1.0f : 0.0f);
+	DynMat->SetTextureParameterValue(TEXT("SnowTexture"),SnowTexture);
+	DynMat->SetScalarParameterValue(TEXT("SnowIndex"), SnowIndex);
+	DynMat->SetScalarParameterValue(TEXT("IsNoise"), IsNoise? 1.0f : 0.0f);
+	DynMat->SetScalarParameterValue(TEXT("NoiseScale"), noiseScale);
+	DynMat->SetScalarParameterValue(TEXT("NoiseIndex"), noiseIndex);
+	DynMat->SetVectorParameterValue(TEXT("ExternalSphereCenter1"),ExternalSphereCenter1);
+	DynMat->SetVectorParameterValue(TEXT("ExternalSphereCenter2"),ExternalSphereCenter2);
+	DynMat->SetVectorParameterValue(TEXT("ExternalSphereCenter3"),ExternalSphereCenter3);
+	DynMat->SetVectorParameterValue(TEXT("ExternalSphereCenter4"),ExternalSphereCenter4);
+	DynMat->SetVectorParameterValue(TEXT("ExternalSphereCenter5"),ExternalSphereCenter5);
+	DynMat->SetScalarParameterValue(TEXT("ExternalSphereRadius1"),ExternalSphereRadius1);
+	DynMat->SetScalarParameterValue(TEXT("ExternalSphereRadius2"),ExternalSphereRadius2);
+	DynMat->SetScalarParameterValue(TEXT("ExternalSphereRadius3"),ExternalSphereRadius3);
+	DynMat->SetScalarParameterValue(TEXT("ExternalSphereRadius4"),ExternalSphereRadius4);
+	DynMat->SetScalarParameterValue(TEXT("ExternalSphereRadius5"),ExternalSphereRadius5);
+	DynMat->SetScalarParameterValue(TEXT("ExternalSphereCount"), ExternalNumSpheres);
+	DynMat->SetScalarParameterValue(TEXT("ExternalRotationSpeed"),ExternalRotationSpeed);
+	DynMat->SetVectorParameterValue(TEXT("BaseColor"),BaseColor);
+	DynMat->SetScalarParameterValue(TEXT("UseTexture"), useTexture? 1.0f : 0.0f);
 }
 
 // Called when the game starts
